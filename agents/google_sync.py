@@ -1,6 +1,5 @@
 import os
 import json
-import google.auth
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 
@@ -10,16 +9,27 @@ creds = service_account.Credentials.from_service_account_info(info)
 docs_service = build('docs', 'v1', credentials=creds)
 drive_service = build('drive', 'v3', credentials=creds)
 
+# --- CONFIGURATION ---
+# Replace this with the Folder ID you copied from your browser URL
+FOLDER_ID = '16cXE3sTts9wgW17XkwYbm7cz21P9KKno' 
+
 # 2. Read the Outline
 with open('latest_outline.md', 'r') as f:
     text_content = f.read()
 
-# 3. Create the Doc
-doc = docs_service.documents().create(body={'title': 'Liber Draft: New Project'}).execute()
-doc_id = doc.get('documentId')
+# 3. Create the Doc and PLACE it in your shared folder
+file_metadata = {
+    'name': 'Liber Draft: New Outline',
+    'mimeType': 'application/vnd.google-apps.document',
+    'parents': [FOLDER_ID] # This ensures it goes to YOUR folder
+}
 
-# 4. Insert the Text
+# Use the Drive API to create the file in the specific folder
+doc_file = drive_service.files().create(body=file_metadata, fields='id').execute()
+doc_id = doc_file.get('id')
+
+# 4. Insert the Text into the new Doc
 requests = [{'insertText': {'location': {'index': 1}, 'text': text_content}}]
 docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
 
-print(f"Document created! ID: {doc_id}")
+print(f"Success! Document created in your folder. ID: {doc_id}")
