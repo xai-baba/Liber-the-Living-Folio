@@ -10,26 +10,32 @@ docs_service = build('docs', 'v1', credentials=creds)
 drive_service = build('drive', 'v3', credentials=creds)
 
 # --- CONFIGURATION ---
-# Replace this with the Folder ID you copied from your browser URL
 FOLDER_ID = '16cXE3sTts9wgW17XkwYbm7cz21P9KKno' 
+MY_EMAIL = 'xaibaba629@gmail.com' # Your real Gmail from the screenshot
 
 # 2. Read the Outline
 with open('latest_outline.md', 'r') as f:
     text_content = f.read()
 
-# 3. Create the Doc and PLACE it in your shared folder
+# 3. Create the Doc metadata
 file_metadata = {
     'name': 'Liber Draft: New Outline',
     'mimeType': 'application/vnd.google-apps.document',
-    'parents': [FOLDER_ID] # This ensures it goes to YOUR folder
+    'parents': [FOLDER_ID]
 }
 
-# Use the Drive API to create the file in the specific folder
-doc_file = drive_service.files().create(body=file_metadata, fields='id').execute()
+# 4. Create the file and fix the Quota issue
+# We use 'supportsAllDrives=True' to ensure it can write to your shared folder
+doc_file = drive_service.files().create(
+    body=file_metadata, 
+    fields='id',
+    supportsAllDrives=True 
+).execute()
+
 doc_id = doc_file.get('id')
 
-# 4. Insert the Text into the new Doc
+# 5. Insert the Text
 requests = [{'insertText': {'location': {'index': 1}, 'text': text_content}}]
 docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
 
-print(f"Success! Document created in your folder. ID: {doc_id}")
+print(f"Success! Document created. ID: {doc_id}")
