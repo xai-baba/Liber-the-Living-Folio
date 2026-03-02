@@ -1,0 +1,39 @@
+name: Liber Architect Agent
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'What do you want to write about today?'
+        required: true
+        default: 'The future of AI in 2026'
+
+jobs:
+  build-outline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: pip install pydantic-ai groq pydantic
+
+      - name: Run Architect Agent
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          python -c "
+          import os
+          from pydantic_ai import Agent
+          
+          # This is a tiny version of our Architect Agent
+          agent = Agent('groq:llama-3.3-70b-versatile', system_prompt='You are the Liber Architect. Create a 10-point deep-dive outline for a 5,000 word article based on the user topic.')
+          
+          result = agent.run_sync('${{ github.event.inputs.topic }}')
+          print('\n--- ARCHITECT OUTLINE GENERATED ---\n')
+          print(result.data)
+          "
