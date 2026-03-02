@@ -62,10 +62,13 @@
             });
 
             // Status 204 means GitHub accepted the request successfully
-            if (response.status === 204) {
-                status.innerText = "🚀 Success! The Architect is working. Check your repo in 60 seconds.";
-                status.style.color = "green";
-            } else {
+           if (response.status === 204) {
+    status.innerText = "🚀 Success! The Architect is working.";
+    // Show the link to the file in your repo
+    const viewLink = document.getElementById('view-link');
+    viewLink.href = "https://github.com/xai-baba/Liber-the-Living-Folio/blob/main/latest_outline.md";
+    viewLink.style.display = "block";
+} else {
                 const errorData = await response.json();
                 status.innerText = "Error: " + (errorData.message || "Unauthorized");
                 status.style.color = "red";
