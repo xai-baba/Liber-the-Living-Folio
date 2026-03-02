@@ -24,14 +24,46 @@
     </div>
 
     <script>
-        async def triggerArchitect() {
-            const topic = document.getElementById('topic').value;
-            const status = document.getElementById('status');
-            status.innerText = "Liber is waking up the Architect...";
-            
-            // Note: We will connect this to the GitHub API in the next step
-            console.log("Topic to send:", topic);
+    async function triggerArchitect() {
+        const topic = document.getElementById('topic').value;
+        const status = document.getElementById('status');
+        
+        // Use a prompt to ask for the token (Safest way for a simple HTML build)
+        const token = prompt("Please enter your Liber Access Token to proceed:");
+
+        if (!token) return;
+
+        status.innerText = "Liber is waking up the Architect...";
+
+        const url = "https://api.github.com/repos/xai-baba/Liber-the-Living-Folio/actions/workflows/architect.yml/dispatches";
+        
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28"
+                },
+                body: JSON.stringify({
+                    ref: "main", // Your branch
+                    inputs: { topic: topic }
+                })
+            });
+
+            if (response.ok) {
+                status.innerText = "Success! The Architect has started building. Check back in 1 minute.";
+                status.style.color = "green";
+            } else {
+                const errorData = await response.json();
+                status.innerText = "Error: " + (errorData.message || "Could not start.");
+                status.style.color = "red";
+            }
+        } catch (err) {
+            status.innerText = "Connection failed.";
+            status.style.color = "red";
         }
-    </script>
+    }
+</script>
 </body>
 </html>
