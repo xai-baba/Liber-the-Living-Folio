@@ -5,7 +5,6 @@ on:
       topic:
         description: 'What do you want to write about today?'
         required: true
-        default: 'The future of AI in 2026'
 
 jobs:
   run-agent:
@@ -21,12 +20,18 @@ jobs:
           python-version: '3.11'
 
       - name: Install Dependencies
-        run: pip install pydantic-ai groq 
+        run: |
+          pip install pydantic-ai groq google-api-python-client google-auth
 
-      - name: Run Agent
+      - name: Generate Outline
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python agents/architect_engine.py "${{ github.event.inputs.topic }}"
+
+      - name: Sync to Google Docs
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: python agents/google_sync.py
 
       - name: Commit and Push
         run: |
