@@ -21,7 +21,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Dependencies
-        run: pip install pydantic-ai groq pydantic
+        run: pip install pydantic-ai groq 
 
       - name: Run Agent
         env:
