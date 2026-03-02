@@ -62,12 +62,15 @@
             });
 
             // Status 204 means GitHub accepted the request successfully
-           if (response.status === 204) {
-    status.innerText = "🚀 Success! The Architect is working.";
-    // Show the link to the file in your repo
-    const viewLink = document.getElementById('view-link');
-    viewLink.href = "https://github.com/xai-baba/Liber-the-Living-Folio/blob/main/latest_outline.md";
-    viewLink.style.display = "block";
+          if (response.status === 204) {
+    status.innerText = "🚀 Success! The Architect has finished.";
+    status.style.color = "green";
+    
+    // Create a link to the file so you can open it immediately
+    const repoUrl = "https://github.com/xai-baba/Liber-the-Living-Folio/blob/main/latest_outline.md";
+    const linkPara = document.createElement("p");
+    linkPara.innerHTML = `<a href="${repoUrl}" target="_blank" style="color:blue; font-weight:bold;">Click here to open your Outline</a>`;
+    document.body.appendChild(linkPara);
 } else {
                 const errorData = await response.json();
                 status.innerText = "Error: " + (errorData.message || "Unauthorized");
