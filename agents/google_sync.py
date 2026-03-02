@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaInMemoryUpload
 from google.oauth2 import service_account
@@ -11,32 +12,46 @@ drive_service = build('drive', 'v3', credentials=creds)
 
 # --- CONFIGURATION ---
 FOLDER_ID = '16cXE3sTts9wgW17XkwYbm7cz21P9KKno' 
+MY_EMAIL = 'xaibaba692@gmail.com'
 
 # 2. Read the Outline
 with open('latest_outline.md', 'r') as f:
     text_content = f.read()
 
-# 3. Use the Media Upload method
-# This treats the outline as a 'file upload' which is more likely to use your quota
-media = MediaInMemoryUpload(text_content.encode('utf-8'), mimetype='text/markdown')
-
-file_metadata = {
-    'name': 'Liber Draft: New Outline',
-    'mimeType': 'application/vnd.google-apps.document', # Convert to Google Doc format
-    'parents': [FOLDER_ID]
-}
-
 try:
-    # 4. Perform the Upload
+    # STEP A: Create an EMPTY file metadata (0 bytes)
+    file_metadata = {
+        'name': 'Liber Draft: New Outline',
+        'mimeType': 'application/vnd.google-apps.document',
+        'parents': [FOLDER_ID]
+    }
+    
+    # STEP B: Create the empty file
     file = drive_service.files().create(
         body=file_metadata,
-        media_body=media,
         fields='id',
         supportsAllDrives=True
     ).execute()
+    doc_id = file.get('id')
     
-    print(f"Success! Document created via Media Upload. ID: {file.get('id')}")
+    # STEP C: Give YOU permission immediately
+    # This links the file to your 15GB quota
+    drive_service.permissions().create(
+        fileId=doc_id,
+        body={'type': 'user', 'role': 'writer', 'emailAddress': MY_EMAIL},
+        supportsAllDrives=True
+    ).execute()
+
+    # STEP D: Now UPLOAD the content to the existing ID
+    media = MediaInMemoryUpload(text_content.encode('utf-8'), mimetype='text/plain')
+    drive_service.files().update(
+        fileId=doc_id,
+        media_body=media,
+        supportsAllDrives=True
+    ).execute()
+    
+    print(f"Success! Quota bypassed. Doc ID: {doc_id}")
 
 except Exception as e:
-    print(f"Media Upload failed: {e}")
+    print(f"Bypass failed: {e}")
     raise
