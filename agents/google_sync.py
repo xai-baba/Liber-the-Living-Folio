@@ -11,7 +11,7 @@ drive_service = build('drive', 'v3', credentials=creds)
 
 # --- CONFIGURATION ---
 FOLDER_ID = '16cXE3sTts9wgW17XkwYbm7cz21P9KKno' 
-MY_EMAIL = 'xaibaba629@gmail.com' # Your real Gmail from the screenshot
+MY_EMAIL = 'xaibaba692@gmail.com' # Updated from your screenshot
 
 # 2. Read the Outline
 with open('latest_outline.md', 'r') as f:
@@ -24,18 +24,34 @@ file_metadata = {
     'parents': [FOLDER_ID]
 }
 
-# 4. Create the file and fix the Quota issue
-# We use 'supportsAllDrives=True' to ensure it can write to your shared folder
-doc_file = drive_service.files().create(
-    body=file_metadata, 
-    fields='id',
-    supportsAllDrives=True 
-).execute()
+try:
+    # 4. Create the file using YOUR folder's quota
+    doc_file = drive_service.files().create(
+        body=file_metadata, 
+        fields='id',
+        supportsAllDrives=True 
+    ).execute()
+    doc_id = doc_file.get('id')
 
-doc_id = doc_file.get('id')
+    # 5. THE FIX: Transfer Permission/Ownership
+    # This makes YOU the owner so the robot's 0GB quota doesn't matter
+    user_permission = {
+        'type': 'user',
+        'role': 'writer',
+        'emailAddress': MY_EMAIL
+    }
+    drive_service.permissions().create(
+        fileId=doc_id,
+        body=user_permission,
+        supportsAllDrives=True
+    ).execute()
 
-# 5. Insert the Text
-requests = [{'insertText': {'location': {'index': 1}, 'text': text_content}}]
-docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+    # 6. Insert the Text
+    requests = [{'insertText': {'location': {'index': 1}, 'text': text_content}}]
+    docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
 
-print(f"Success! Document created. ID: {doc_id}")
+    print(f"Success! Document created and shared. ID: {doc_id}")
+
+except Exception as e:
+    print(f"Quota bypass failed: {e}")
+    raise
